@@ -1,0 +1,48 @@
+[submodule "external/cereal"]
+	path = external/cereal
+	url = git@github.com:USCiLab/cereal.git
+[submodule "external/Catch2"]
+	path = external/Catch2
+	url = git@github.com:catchorg/Catch2.git
+[submodule "external/easyloggingpp"]
+	path = external/easyloggingpp
+	url = git@github.com:muflihun/easyloggingpp.git
+[submodule "external/json"]
+	path = external/json
+	url = git@github.com:nlohmann/json.git
+[submodule "external/di"]
+	path = external/di
+	url = git@github.com:boost-experimental/di.git
+[submodule "external/libpqxx"]
+	path = external/libpqxx
+	url = git@github.com:jtv/libpqxx.git
+[submodule "external/librdkafka"]
+	path = external/librdkafka
+	url = git@github.com:edenhill/librdkafka.git
+[submodule "external/entt"]
+	path = external/entt
+	url = git@github.com:skypjack/entt.git
+[submodule "external/LuaJIT"]
+	path = external/LuaJIT
+	url = git@github.com:LuaJIT/LuaJIT.git
+[submodule "external/lz4"]
+	path = external/lz4
+	url = git@github.com:lz4/lz4.git
+[submodule "external/readerwriterqueue"]
+	path = external/readerwriterqueue
+	url = git@github.com:cameron314/readerwriterqueue.git
+[submodule "external/libsodium"]
+	path = external/libsodium
+	url = git@github.com:jedisct1/libsodium.git
+[submodule "external/libcuckoo"]
+	path = external/libcuckoo
+	url = git@github.com:efficient/libcuckoo.git
+[submodule "external/uWebSockets"]
+	path = external/uWebSockets
+	url = git@github.com:uNetworking/uWebSockets.git
+[submodule "external/cpprestsdk"]
+	path = external/cpprestsdk
+	url = git@github.com:Microsoft/cpprestsdk.git
+[submodule "external/assets"]
+	path = external/assets
+	url = git@github.com:RealmOfAesir/assets.git
