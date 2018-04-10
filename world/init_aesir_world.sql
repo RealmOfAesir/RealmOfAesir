@@ -1,29 +1,5 @@
 START TRANSACTION;
 
-CREATE TABLE scripts (
-    id SERIAL PRIMARY KEY,
-    script_name citext NOT NULL,
-    script text NOT NULL
-);
-
-CREATE TABLE script_triggers (
-    id SERIAL PRIMARY KEY,
-    trigger_type citext NOT NULL,
-    script_id INT NOT NULL,
-    script_zone_id INT NULL,
-    global BOOLEAN NOT NULL
-);
-
-CREATE TABLE script_zones (
-    id SERIAL PRIMARY KEY,
-    zone_name text NULL,
-    map_id INT NOT NULL,
-    x INT NOT NULL,
-    y INT NOT NULL,
-    width INT NOT NULL,
-    height INT NOT NULL
-);
-
 CREATE TABLE stats (
     id SERIAL PRIMARY KEY,
     stat_name citext NOT NULL
@@ -117,10 +93,6 @@ CREATE TABLE schema_information (
     date TIMESTAMPTZ NOT NULL
 );
 
-ALTER TABLE scripts ADD CONSTRAINT "scripts_name_unique" UNIQUE (script_name);
-ALTER TABLE script_triggers ADD CONSTRAINT "script_triggers_scripts_id_fkey" FOREIGN KEY (script_id) REFERENCES scripts(id);
-ALTER TABLE script_triggers ADD CONSTRAINT "script_triggers_script_zones_id_fkey" FOREIGN KEY (script_zone_id) REFERENCES script_zones(id);
-ALTER TABLE script_zones ADD CONSTRAINT "script_zones_map_id_fkey" FOREIGN KEY (map_id) REFERENCES maps(id);
 ALTER TABLE locations ADD CONSTRAINT "locations_maps_id_fkey" FOREIGN KEY (map_id) REFERENCES maps(id);
 ALTER TABLE map_tiles ADD CONSTRAINT "map_tiles_maps_id_fkey" FOREIGN KEY (map_id) REFERENCES maps(id);
 ALTER TABLE players ADD CONSTRAINT "players_locations_id_fkey" FOREIGN KEY (location_id) REFERENCES locations(id);

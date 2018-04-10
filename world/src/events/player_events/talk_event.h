@@ -22,10 +22,10 @@
 namespace roa {
     struct talk_event : public player_event {
     public:
-        create_script_event() = default;
-        create_script_event(std::string name, std::string script, uint32_t entity_id, uint32_t execute_in_ms, uint32_t loop_every_ms, trigger_type_enum trigger_type, bool debug)
+        talk_event() = default;
+        talk_event(std::string name, std::string script, uint32_t entity_id, uint32_t execute_in_ms, uint32_t loop_every_ms, trigger_type_enum trigger_type, bool debug)
                 : player_event(create_script_event::type), name(name), script(script), entity_id(entity_id), execute_in_ms(execute_in_ms), loop_every_ms(loop_every_ms), trigger_type(trigger_type), debug(debug) {}
-        virtual ~create_script_event() {}
+        virtual ~talk_event() {}
 
         static constexpr uint32_t type = 1003;
         std::string name;

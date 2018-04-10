@@ -59,7 +59,8 @@ void world_create_character_handler::handle_message(unique_ptr<binary_message co
             }
 
             player plyr{0, casted_msg->user_id, 0, casted_msg->player_name};
-            _players_repository.insert_player_at_start_location(plyr, get<1>(transaction));
+            // TODO
+            //_players_repository.insert_player_at_start_location(plyr, get<1>(transaction));
             get<1>(transaction)->commit();
 
             _player_event_queue.enqueue(make_shared<enter_world_event>(msg->sender.client_id, msg->sender.server_destination_id, plyr));

@@ -70,55 +70,6 @@ bool players_repository::insert_or_update_player(player &plyr, unique_ptr<idatab
     return false;
 }
 
-void players_repository::insert_player_at_start_location(player &plyr,
-                                                         std::unique_ptr<idatabase_transaction> const &transaction) {
-    // Currently this requires three queries, but it is technically possible to have postgresql cast
-    // the setting value to an int.
-    auto setting_result = transaction->execute("SELECT value FROM settings WHERE setting_name='player_start_script_zone'");
-
-    if(unlikely(setting_result.size() != 1)) {
-        throw unexpected_result_error("expected exactly one setting_result"s);
-    }
-
-    auto script_zone_id = setting_result[0][0].as<string>();
-
-    if(unlikely(script_zone_id.length() == 0)) {
-        throw unexpected_result_error("expected script_zone_id to contain something"s);
-    }
-
-    auto loc_result = transaction->execute("WITH map_view AS ("
-                                               "SELECT z.map_id, z.x, z.y, m.map_name "
-                                               "FROM script_zones z "
-                                               "INNER JOIN maps m ON m.id = z.map_id "
-                                               "WHERE z.id = " + transaction->escape(script_zone_id) + "), "
-                                           "inserted_loc AS ("
-                                               "INSERT INTO locations AS l (map_id, x, y) "
-                                               "SELECT map_view.map_id, map_view.x, map_view.y "
-                                               "FROM map_view RETURNING l.id) "
-                                           "SELECT inserted_loc.id, map_view.x, map_view.y, map_view.map_id, map_view.map_name "
-                                           "FROM map_view, inserted_loc");
-
-    if(unlikely(loc_result.size() != 1)) {
-        throw unexpected_result_error("expected exactly one loc_result"s);
-    }
-
-    uint64_t loc_id = loc_result[0][0].as<uint32_t>();
-
-    auto result = transaction->execute(
-            "INSERT INTO players (user_id, location_id, player_name) VALUES (" + to_string(plyr.user_id) +
-            ", " + to_string(loc_id) +  ", '" + transaction->escape(plyr.name) + "') RETURNING id");
-
-    if(unlikely(result.size() != 1)) {
-        throw unexpected_result_error("expected exactly one result"s);
-    }
-
-    plyr.id = result[0][0].as<uint64_t>();
-    plyr.location_id = loc_result[0][0].as<uint32_t>();
-    plyr.location = make_optional<player_location>({loc_result[0][1].as<uint32_t>(), loc_result[0][2].as<uint32_t>(), loc_result[0][3].as<uint32_t>(), loc_result[0][4].as<string>()});
-
-    LOG(DEBUG) << NAMEOF(players_repository::insert_player_at_start_location) << " inserted player with id " << plyr.id << " in location " << loc_id;
-}
-
 void players_repository::update_player(player &plyr, unique_ptr<idatabase_transaction> const &transaction) {
 
     transaction->execute(

@@ -17,9 +17,13 @@
 */
 
 #include <easylogging++.h>
-#include <lua/lua_interop.h>
 #include <chrono>
 #include <macros.h>
+#include <base64.h>
+#include <lz4.h>
+#include <ecs/ecs.h>
+#include <helpers/tiled_converter.h>
+#include <nlohmann/json.hpp>
 
 #include <unistd.h>
 
@@ -27,6 +31,22 @@ INITIALIZE_EASYLOGGINGPP
 
 using namespace std;
 using namespace roa;
+using namespace nlohmann;
+
+size_t get_current_rss() {
+    /* Linux ---------------------------------------------------- */
+    long rss = 0L;
+    FILE* fp = NULL;
+    if ( (fp = fopen( "/proc/self/statm", "r" )) == NULL )
+        return (size_t)0L;      /* Can't open? */
+    if ( fscanf( fp, "%*s%ld", &rss ) != 1 )
+    {
+        fclose( fp );
+        return (size_t)0L;      /* Can't read? */
+    }
+    fclose( fp );
+    return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
+}
 
 void print_process_mem_usage(string stuff) {
     using std::ios_base;
@@ -60,85 +80,76 @@ void print_process_mem_usage(string stuff) {
     LOG(INFO) << stuff << " VM: " << (vsize / 1024.0) << " - RSS: " << rss * page_size_kb;
 }
 
-void benchmark_loading_and_running_lua() {
-    std::string lib;
-    std::string src_file;
+void benchmark_tiled_converter() {
+    EntityManager _ex;
 
-    {
-        std::ifstream lib_stream("scripts/roa_library.lua");
-        lib_stream.seekg(0, std::ios::end);
-        lib.reserve(lib_stream.tellg());
-        lib_stream.seekg(0, std::ios::beg);
+    const int layers = 100;
+    const int width_tiles = 500;
+    const int height_tiles = 500;
 
-        lib.assign((std::istreambuf_iterator<char>(lib_stream)),
-                   std::istreambuf_iterator<char>());
-    }
-
-    {
-        std::ifstream src_file_stream("scripts/tile_id_upwards.lua");
-        src_file_stream.seekg(0, std::ios::end);
-        src_file.reserve(src_file_stream.tellg());
-        src_file_stream.seekg(0, std::ios::beg);
-
-        src_file.assign((std::istreambuf_iterator<char>(src_file_stream)),
-                        std::istreambuf_iterator<char>());
-    }
-
-    set_library_script(lib);
-    lua_script L = load_script_with_libraries("test", src_file);
-
-    print_process_mem_usage("start mem: ");
-
+    auto start_mem = get_current_rss();
     auto start = chrono::high_resolution_clock::now();
-    for (int i = 0; i < 100'000; i++) {
-        L.load();
+    auto map_entity = _ex.create();
+    auto& mc = _ex.assign<map_component>(map_entity, 0u, 64u, 64u, 640u, 640u, 1u, 1u, 101u);
+    mc.tilesets.emplace_back(1, "terrain.png"s, 64, 64, 1536, 2560);
+    for(uint32_t z = 0; z < layers; z++) {
+        mc.layers.emplace_back(vector<uint64_t>{}, 0, 0, width_tiles, height_tiles);
+        mc.layers[z].tiles.reserve(width_tiles * height_tiles);
 
-        L.create_table();
-
-        L.push_boolean("debug", false);
-        L.push_boolean("library_debug", false);
-
-        L.set_global("roa_settings");
-
-        L.create_table();
-
-        L.push_integer("tile_id", 1);
-        L.push_integer("id", 1);
-        L.push_integer("type", 1);
-
-        L.create_nested_table("stats");
-
-        L.push_integer("test", 15);
-        L.push_integer("test2", 16);
-
-        L.push_table();
-
-        L.set_global("roa_entity");
-
-        L.create_table();
-
-        L.push_integer("tile_id", 2);
-        L.push_integer("first_tile_id", 2);
-        L.push_integer("max_tile_id", 2);
-        L.push_integer("width", 2);
-        L.push_integer("height", 2);
-
-        L.set_global("roa_map");
-
-        L.create_table();
-
-        L.push_integer("id", 20);
-        L.push_string("name", "script");
-
-        L.set_global("roa_script");
-        L.run();
+        for(uint32_t x = 0; x < width_tiles; x++) {
+            for(uint32_t y = 0; y < height_tiles; y++) {
+                auto tile_entity = _ex.create();
+                _ex.assign<tile_component>(tile_entity, map_entity, static_cast<uint16_t>(y+1));
+                mc.layers[z].tiles.push_back(tile_entity);
+            }
+        }
     }
+
     auto end = chrono::high_resolution_clock::now();
+    auto end_mem = get_current_rss();
 
-    print_process_mem_usage("end mem: ");
+    LOG(INFO) << " startup time required to run: " << chrono::duration_cast<chrono::milliseconds>((end - start)).count() << " ms";
+    LOG(INFO) << " mem: " << start_mem / 1024 / 1024 << " - " << (end_mem - start_mem) / 1024 / 1024;
 
-    LOG(INFO) << NAMEOF(benchmark_loading_and_running_lua) << " time required to run: "
-              << chrono::duration_cast<chrono::milliseconds>((end - start)).count() << " ms";
+    start = chrono::high_resolution_clock::now();
+    string ret;
+    ret = tiled_converter::convert_map_to_json(_ex, mc);
+    end = chrono::high_resolution_clock::now();
+
+    LOG(INFO) << " convert to json time required to run: " << chrono::duration_cast<chrono::milliseconds>((end - start)).count() << " ms";
+
+    _ex.reset();
+
+    start = chrono::high_resolution_clock::now();
+    auto json_map = json::parse(ret);
+    end = chrono::high_resolution_clock::now();
+    LOG(INFO) << " parse time required to run: " << chrono::duration_cast<chrono::milliseconds>((end - start)).count() << " ms";
+
+    start = chrono::high_resolution_clock::now();
+    for(uint32_t z = 0; z < layers; z++) {
+        std::string base64data = json_map["layers"][z]["data"];
+        std::string data = base64_decode(base64data);
+
+        int tiles_size = width_tiles * height_tiles * 4;
+        char *tiles = new char[tiles_size];
+
+        auto lz4_ret = LZ4_decompress_safe(data.c_str(), tiles, data.size(), tiles_size);
+        CHECK(lz4_ret > 0);
+
+        if (lz4_ret > 0) {
+            for (uint32_t x = 0; x < width_tiles; x++) {
+                for (uint32_t y = 0; y < height_tiles; y++) {
+                    uint32_t tocheck = reinterpret_cast<uint32_t *>(tiles)[x * width_tiles + y];
+                    CHECK(tocheck == y + 1);
+                }
+            }
+        }
+
+        delete tiles;
+    }
+    end = chrono::high_resolution_clock::now();
+
+    LOG(INFO) << " decompress time required to run: " << chrono::duration_cast<chrono::milliseconds>((end - start)).count() << " ms";
 }
 
 void init_stuff() {
@@ -154,7 +165,7 @@ void init_stuff() {
 int main(int argc, char const *const *argv) {
     init_stuff();
 
-    benchmark_loading_and_running_lua();
+    benchmark_tiled_converter();
 
     return 0;
 }

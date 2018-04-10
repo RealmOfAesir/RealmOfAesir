@@ -24,36 +24,18 @@
 #include <base64.h>
 #include <lz4.h>
 #include <unistd.h>
-#include <chrono>
 
 using namespace std;
 using namespace roa;
 using namespace nlohmann;
 
-size_t get_current_rss() {
-    /* Linux ---------------------------------------------------- */
-    long rss = 0L;
-    FILE* fp = NULL;
-    if ( (fp = fopen( "/proc/self/statm", "r" )) == NULL )
-        return (size_t)0L;      /* Can't open? */
-    if ( fscanf( fp, "%*s%ld", &rss ) != 1 )
-    {
-        fclose( fp );
-        return (size_t)0L;      /* Can't read? */
-    }
-    fclose( fp );
-    return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
-}
-
 TEST_CASE("convert_map_to_json tests") {
     EntityManager _ex;
 
-    const int layers = 100;
-    const int width_tiles = 500;
-    const int height_tiles = 500;
+    const int layers = 10;
+    const int width_tiles = 50;
+    const int height_tiles = 50;
 
-    auto start_mem = get_current_rss();
-    auto start = chrono::high_resolution_clock::now();
     auto map_entity = _ex.create();
     auto& mc = _ex.assign<map_component>(map_entity, 0u, 64u, 64u, 640u, 640u, 1u, 1u, 101u);
     mc.tilesets.emplace_back(1, "terrain.png"s, 64, 64, 1536, 2560);
@@ -69,19 +51,8 @@ TEST_CASE("convert_map_to_json tests") {
             }
         }
     }
-
-    auto end = chrono::high_resolution_clock::now();
-    auto end_mem = get_current_rss();
-
-    LOG(INFO) << " startup time required to run: " << chrono::duration_cast<chrono::milliseconds>((end - start)).count() << " ms";
-    LOG(INFO) << " mem: " << start_mem / 1024 / 1024 << " - " << (end_mem - start_mem) / 1024 / 1024;
-
-    start = chrono::high_resolution_clock::now();
     string ret;
     REQUIRE_NOTHROW(ret = tiled_converter::convert_map_to_json(_ex, mc));
-    end = chrono::high_resolution_clock::now();
-
-    LOG(INFO) << " convert to json time required to run: " << chrono::duration_cast<chrono::milliseconds>((end - start)).count() << " ms";
 
     _ex.reset();
 

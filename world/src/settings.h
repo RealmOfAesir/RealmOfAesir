@@ -27,6 +27,5 @@ namespace roa {
         double movement_multiplier;
         double drop_rate_multiplier;
         bool maintenance_mode;
-        std::string player_start_script_zone;
     };
 }

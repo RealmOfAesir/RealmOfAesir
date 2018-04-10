@@ -37,11 +37,8 @@
 #include <database_pool.h>
 #include <repositories/locations_repository.h>
 #include <repositories/maps_repository.h>
-#include <repositories/script_zones_repository.h>
 #include <repositories/settings_repository.h>
 #include <message_handlers/world/world_get_characters_handler.h>
-#include <repositories/scripts_repository.h>
-#include <lua/lua_interop.h>
 #include <world/world.h>
 #include "message_handlers/message_dispatcher.h"
 #include "message_handlers/world/world_create_character_handler.h"
@@ -197,7 +194,6 @@ unique_ptr<thread> create_consumer_thread(Config& config, moodycamel::ReaderWrit
                 boost::di::bind<ilocations_repository>.to<locations_repository>(),
                 boost::di::bind<imaps_repository>.to<maps_repository>(),
                 boost::di::bind<iplayers_repository>.to<players_repository>(),
-                boost::di::bind<iscript_zones_repository>.to<script_zones_repository>(),
                 boost::di::bind<isettings_repository>.to<settings_repository>()
         );
 

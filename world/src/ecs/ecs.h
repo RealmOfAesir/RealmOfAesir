@@ -25,7 +25,6 @@
 #include "components/map_component.h"
 #include "components/player_component.h"
 #include "components/position_component.h"
-#include "components/script_component.h"
 #include "components/stat_component.h"
 #include "components/tile_component.h"
 

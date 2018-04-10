@@ -22,9 +22,6 @@
 [submodule "external/entt"]
 	path = external/entt
 	url = git@github.com:skypjack/entt.git
-[submodule "external/LuaJIT"]
-	path = external/LuaJIT
-	url = git@github.com:LuaJIT/LuaJIT.git
 [submodule "external/lz4"]
 	path = external/lz4
 	url = git@github.com:lz4/lz4.git

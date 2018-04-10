@@ -46,15 +46,6 @@ namespace roa {
         virtual bool insert_or_update_player(player& plyr, std::unique_ptr<idatabase_transaction> const &transaction) = 0;
 
         /**
-         * Insert or update player at the script_zone available from the settings table
-         * @param plyr
-         * @param transaction
-         * @return true if inserted, false if updated
-         */
-        virtual void insert_player_at_start_location(player &plyr,
-                                                     std::unique_ptr<idatabase_transaction> const &transaction) = 0;
-
-        /**
          * Update a player
          * @param plyr
          * @param transaction
@@ -97,8 +88,6 @@ namespace roa {
         auto create_transaction() -> decltype(repository::create_transaction()) override;
 
         bool insert_or_update_player(player& plyr, std::unique_ptr<idatabase_transaction> const &transaction) override;
-        void insert_player_at_start_location(player &plyr,
-                                             std::unique_ptr<idatabase_transaction> const &transaction) override;
         void update_player(player& plyr, std::unique_ptr<idatabase_transaction> const &transaction) override;
         STD_OPTIONAL<player> get_player(std::string const & name, included_tables includes, std::unique_ptr<idatabase_transaction> const &transaction) override;
         STD_OPTIONAL<player> get_player(uint64_t id, included_tables includes, std::unique_ptr<idatabase_transaction> const &transaction) override;

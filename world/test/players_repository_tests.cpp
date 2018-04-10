@@ -25,7 +25,6 @@
 #include "../src/repositories/maps_repository.h"
 #include "../src/repositories/locations_repository.h"
 #include "../src/repositories/settings_repository.h"
-#include "../src/repositories/script_zones_repository.h"
 
 using namespace std;
 using namespace roa;
@@ -39,8 +38,7 @@ TEST_CASE("players repository tests") {
             boost::di::bind<iplayers_repository>.to<players_repository>(),
             boost::di::bind<imaps_repository>.to<maps_repository>(),
             boost::di::bind<ilocations_repository>.to<locations_repository>(),
-            boost::di::bind<isettings_repository>.to<settings_repository>(),
-            boost::di::bind<iscript_zones_repository>.to<script_zones_repository>());
+            boost::di::bind<isettings_repository>.to<settings_repository>());
 
     players_repository players_repo = backend_injector.create<players_repository>();
     maps_repository maps_repo = backend_injector.create<maps_repository>();
@@ -87,26 +85,5 @@ TEST_CASE("players repository tests") {
         REQUIRE(players[0].location->y == loc.y);
         REQUIRE(players[0].items.size() == 0);
         REQUIRE(players[0].stats.size() == 0);
-    }
-
-    SECTION( "player inserted correctly at script zone" ) {
-        settings_repository settings_repo = backend_injector.create<settings_repository>();
-        script_zones_repository script_zones_repo = backend_injector.create<script_zones_repository>();
-
-        script_zone zone{0, "zone_name", _map.id, 0, 0, 1, 1};
-        script_zones_repo.insert_script_zone(zone, get<1>(transaction));
-
-        auto sett = settings_repo.get_setting("player_start_script_zone", get<1>(transaction));
-        sett->value = to_string(zone.id);
-        settings_repo.insert_or_update_setting(sett.value(), get<1>(transaction));
-
-        player plyr{0, 1, 0, "john doe"s};
-        players_repo.insert_player_at_start_location(plyr, get<1>(transaction));
-        REQUIRE(plyr.location_id > 0);
-        REQUIRE(plyr.location);
-        REQUIRE(plyr.location->map_id == _map.id);
-        REQUIRE(plyr.location->map_name == _map.name);
-        REQUIRE(plyr.location->x == zone.x);
-        REQUIRE(plyr.location->y == zone.y);
     }
 }
