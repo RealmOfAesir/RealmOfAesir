@@ -25,6 +25,7 @@ include_directories("${EXTERNAL_DIR}/entt/src")
 include_directories("${EXTERNAL_DIR}/readerwriterqueue")
 include_directories("${EXTERNAL_DIR}/LuaJIT/src")
 include_directories("${EXTERNAL_DIR}/lz4/lib")
+include_directories("${EXTERNAL_DIR}/pcg-cpp/include")
 include_directories("${EXTERNAL_DIR}/Catch2/single_include")
 include_directories("${PROJECT_SOURCE_DIR}/../src/")
 

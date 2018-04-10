@@ -20,6 +20,7 @@ include_directories("${EXTERNAL_DIR}/entt/src")
 include_directories("${EXTERNAL_DIR}/readerwriterqueue")
 include_directories("${EXTERNAL_DIR}/LuaJIT/src")
 include_directories("${EXTERNAL_DIR}/lz4/lib")
+include_directories("${EXTERNAL_DIR}/pcg-cpp/include")
 
 find_library(RDKAFKA_LIBRARY rdkafka HINTS ${EXTERNAL_DIR}/librdkafka/src)
 find_library(RDKAFKAPP_LIBRARY rdkafka++ HINTS ${EXTERNAL_DIR}/librdkafka/src-cpp)

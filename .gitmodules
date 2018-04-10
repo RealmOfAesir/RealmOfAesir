@@ -46,3 +46,6 @@
 [submodule "external/assets"]
 	path = external/assets
 	url = git@github.com:RealmOfAesir/assets.git
+[submodule "external/pcg-cpp"]
+	path = external/pcg-cpp
+	url = git@github.com:imneme/pcg-cpp.git
